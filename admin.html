@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CnC Owner Admin Panel</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+body{padding:30px 4%}
+.tab-box{display:flex;border-bottom:1px solid #333;margin-bottom:30px}
+.admin-tab{padding:12px 20px;cursor:pointer;background:#fff;color:#111;border:1px solid #ddd}
+.tab-active{background:#111;color:#fff}
+.panel{display:none;margin:20px 0}
+.show{display:block}
+input,textarea{padding:7px;margin:6px;width:320px}
+button{padding:8px 15px;background:#111;color:#fff;border:none;cursor:pointer;margin:3px}
+.del-btn{background:#991111;}
+.ship-btn{background:#007722;}
+.disable-btn{background:#aaa;cursor:not-allowed}
+.item-block{border:1px solid #ddd;padding:12px;margin:10px 0}
+.shipped{color:#009922;font-weight:bold;}
+.unship{color:#111;}
+.chat-wrap{display:flex;border:1px solid #ddd;height:500px;margin-top:20px}
+.user-list{width:28%;border-right:1px solid #ddd;overflow-y:auto}
+.chat-content{width:72%;display:flex;flex-direction:column}
+.chat-msg{flex:1;padding:15px;overflow-y:auto}
+.send-bar{padding:10px;border-top:1px solid #ddd}
+.my-msg{background:#eee;padding:6px;max-width:60%}
+.cus-msg{background:#f3f3f3;padding:6px;max-width:60%}
+.chat-user-item{padding:10px;border-bottom:1px solid #eee;cursor:pointer}
+.pop-chat{position:fixed;top:10%;right:5%;width:380px;height:450px;border:1px solid #222;background:#fff;display:none;flex-direction:column;z-index:999}
+.pop-top{background:#111;color:#fff;padding:8px;display:flex;justify-content:space-between}
+.pop-msg{flex:1;overflow:auto;padding:10px}
+.pop-input{display:flex}
+.pop-input input{flex:1;padding:5px}
+.preview-img{width:150px;height:150px;border:1px solid #ccc;margin:8px 0;object-fit:cover;}
+.tip-text{color:#c0392b;margin:8px 0}
+</style>
+</head>
+<body>
+<script>
+//两个老板 权限全部一致
+const ADMIN_LIST = [
+    {pwd:"20070608",role:"all"},
+    {pwd:"20090607",role:"all"}
+];
+let inputPwd = prompt("Input Admin Password");
+let loginRole = "";
+let findAdmin = ADMIN_LIST.find(item=>item.pwd === inputPwd);
+if(!findAdmin){
+    alert("Wrong Password");
+    location.href="index.html";
+}else{
+    loginRole = find.role;
+}
+localStorage.setItem("cncAdminRole",loginRole);
+</script>
+
+<a href="index.html">← Back To Store Front</a>
+<h1 style="margin:20px 0">CnC Owner Admin Dashboard <span class="tip-text">【全权限管理员】</span></h1>
+
+<div class="tab-box">
+    <button class="admin-tab tab-active" onclick="switchAdminTab('goods')">Goods Manage</button>
+    <button class="admin-tab" onclick="switchAdminTab('user')">All Registered Users</button>
+    <button class="admin-tab" onclick="switchAdminTab('order')">All Customer Order</button>
+    <button class="admin-tab" onclick="switchAdminTab('chat')">Global Chat List</button>
+    <button class="admin-tab" onclick="switchAdminTab('gift')">Point Gift Setting</button>
+</div>
+
+<div id="goodsPanel" class="panel show">
+    <h3>Add / Edit Product (Upload Photo, Price, Description & Stock)</h3>
+    <div id="goodsList"></div>
+    <div style="margin-top:30px;border-top:1px solid #eee;padding-top:20px">
+        <h4>Add New Product</h4>
+        <input id="newName" placeholder="Product Name"><br>
+        <input id="newPrice" placeholder="Price(EUR)" type="number" step="0.01"><br>
+        <input id="newStock" placeholder="Stock Quantity" type="number"><br>
+        <textarea id="newDesc" placeholder="Product Description"></textarea><br>
+        <input type="file" accept="image/*" id="imgUpload"><br>
+        <img id="imgPreview" class="preview-img" style="display:none">
+        <br>
+        <button id="addGoodsBtn" onclick="addNewGoods()">Save New Item</button>
+        <p class="tip-text"></p>
+    </div>
+</div>
+
+<div id="userPanel" class="panel">
+    <h3>All Registered Customers | Manual Add Points</h3>
+    <div id="userList"></div>
+    <p class="tip-text"></p>
+</div>
+
+<div id="orderPanel" class="panel">
+    <h3>All Submitted Orders | Click Chat to message buyer | Green=Shipped</h3>
+    <div id="orderList"></div>
+</div>
+
+<div id="chatPanel" class="panel">
+    <h3>All Customer Message Inbox (Two Admin share same chat)</h3>
+    <div class="chat-wrap">
+        <div class="user-list" id="chatUserList"></div>
+        <div class="chat-content">
+            <div class="chat-msg" id="chatMsgBox"></div>
+            <div class="send-bar">
+                <input id="ownerMsg" placeholder="Type reply message..." style="width:80%">
+                <button onclick="sendOwnerMsg()">Send</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="giftPanel" class="panel">
+    <h3>Edit Point Exchange Gift</h3>
+    <div id="giftList"></div>
+    <div style="margin-top:25px;border-top:1px solid #eee;padding-top:15px">
+        <h4>Add New Gift</h4>
+        <input id="giftName" placeholder="Gift Name"><br>
+        <input id="giftPoint" placeholder="Need Points" type="number"><br>
+        <button id="addGiftBtn" onclick="addGift()">Add Gift</button>
+        <p class="tip-text"></p>
+    </div>
+</div>
+
+<div class="pop-chat" id="popChatBox">
+    <div class="pop-top">
+        <span id="popUserPhone"></span>
+        <button onclick="closePopChat()">X Close</button>
+    </div>
+    <div class="pop-msg" id="popMsgArea"></div>
+    <div class="pop-input">
+        <input id="popInputTxt">
+        <button onclick="sendPopMsg()">Send</button>
+    </div>
+</div>
+
+<script>
+const DB={
+    getUsers:()=>JSON.parse(localStorage.getItem('cncAllUser')||'[]'),
+    saveUsers:arr=>localStorage.setItem('cncAllUser',JSON.stringify(arr)),
+    getGoods:()=>JSON.parse(localStorage.getItem('cncGoods')||'[]'),
+    saveGoods:arr=>localStorage.setItem('cncGoods',JSON.stringify(arr)),
+    getOrder:()=>JSON.parse(localStorage.getItem('cncOrder')||'[]'),
+    saveOrder:arr=>localStorage.setItem('cncOrder',JSON.stringify(arr)),
+    getChat:()=>JSON.parse(localStorage.getItem('cncChat')||'{}'),
+    saveChat:obj=>localStorage.setItem('cncChat',JSON.stringify(obj)),
+    getPointGift:()=>JSON.parse(localStorage.getItem('cncPointGift')||'[]'),
+    savePointGift:arr=>localStorage.setItem('cncPointGift',JSON.stringify(arr))
+}
+let currentChatUid=null;
+let popChatUid=null;
+let base64Img="";
+const role = localStorage.getItem("cncAdminRole");
+
+window.onload=function(){
+    renderGoodsAdmin();renderUserAdmin();renderOrderAdmin();renderChatUser();renderGiftAdmin();
+}
+
+document.getElementById('imgUpload').onchange=function(e){
+    let file=e.target.files[0];
+    if(!file)return;
+    const reader=new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload=res=>{
+        base64Img=res.target.result;
+        document.getElementById('imgPreview').src=base64Img;
+        document.getElementById('imgPreview').style.display="block";
+    }
+}
+
+function switchAdminTab(type){
+    document.querySelectorAll('.panel').forEach(p=>p.classList.remove('show'));
+    document.querySelectorAll('.admin-tab').forEach(t=>t.classList.remove('tab-active'));
+    event.target.classList.add('tab-active');
+    document.getElementById(type+'Panel').classList.add('show');
+    if(type==='goods')renderGoodsAdmin();
+    if(type==='user')renderUserAdmin();
+    if(type==='order')renderOrderAdmin();
+    if(type==='chat')renderChatUser();
+    if(type==='gift')renderGiftAdmin();
+}
+
+//商品 永远显示删除按钮
+function renderGoodsAdmin(){
+    const goods=DB.getGoods();
+    const box=document.getElementById('goodsList');
+    box.innerHTML='';
+    goods.forEach(g=>{
+        box.innerHTML+=`<div class="item-block">
+        ${g.img?`<img src="${g.img}" style="width:120px;height:120px;object-fit:cover">`:''}
+        <div>Name:${g.name}</div>
+        <div>Price:€${g.price}</div>
+        <div>Stock:${g.stock}</div>
+        <div>Desc:${g.desc}</div>
+        <input id="editS${g.id}" value="${g.stock}" placeholder="New Stock">
+        <button onclick="updateStock(${g.id})">Update Stock</button>
+        <button class="del-btn" onclick="delGoods(${g.id})">Delete Item</button>
+        </div>`
+    })
+}
+//删除无权限限制
+function delGoods(id){
+    let arr=DB.getGoods().filter(x=>x.id!==id);
+    DB.saveGoods(arr);
+    renderGoodsAdmin();
+}
+function updateStock(gid){
+    const goods=DB.getGoods();
+    const g=goods.find(x=>x.id===gid);
+    const newS=parseInt(document.getElementById('editS'+gid).value);
+    if(isNaN(newS)||newS<0){alert('Wrong number');return;}
+    g.stock=newS;
+    DB.saveGoods(goods);
+    renderGoodsAdmin();
+}
+function addNewGoods(){
+    const name=document.getElementById('newName').value.trim();
+    const price=parseFloat(document.getElementById('newPrice').value);
+    const stock=parseInt(document.getElementById('newStock').value);
+    const desc=document.getElementById('newDesc').value.trim();
+    if(!name||isNaN(price)||stock<1){alert('Fill all required info');return;}
+    const goods=DB.getGoods();
+    const newId=goods.length>0?Math.max(...goods.map(i=>i.id))+1:1;
+    goods.push({id:newId,name,price,stock,desc,img:base64Img});
+    DB.saveGoods(goods);
+    document.getElementById('newName').value="";
+    document.getElementById('newPrice').value="";
+    document.getElementById('newStock').value="";
+    document.getElementById('newDesc').value="";
+    document.getElementById('imgUpload').value="";
+    document.getElementById('imgPreview').style.display="none";
+    base64Img="";
+    renderGoodsAdmin();
+    alert('New product added successfully!');
+}
+
+//用户全部可以加分
+function renderUserAdmin(){
+    const users=DB.getUsers();
+    const box=document.getElementById('userList');
+    box.innerHTML='';
+    users.forEach(u=>{
+        box.innerHTML+=`<div class="item-block">
+        UID:${u.uid}, Phone:${u.phone}, Own Points:${u.point}<br>
+        <input id="addP${u.uid}" placeholder="Add Points Num">
+        <button onclick="manualAddPoint('${u.uid}')">Add Points Manually</button>
+        </div>`
+    })
+}
+function manualAddPoint(uid){
+    const add=parseInt(document.getElementById('addP'+uid).value);
+    if(isNaN(add)||add<=0){alert('Invalid');return;}
+    const users=DB.getUsers();
+    const u=users.find(x=>x.uid===uid);
+    u.point+=add;
+    DB.saveUsers(users);
+    renderUserAdmin();
+    alert(`Success add ${add} points`);
+}
+
+//订单
+function renderOrderAdmin(){
+    const order=DB.getOrder();
+    const allUser=DB.getUsers();
+    const box=document.getElementById('orderList');
+    box.innerHTML='';
+    if(order.length===0){box.innerHTML='No orders yet';return;}
+    order.forEach(o=>{
+        let goodsTxt=o.goodsList.map(x=>`${x.name} ×${x.num} €${x.unitPrice}`).join(' | ');
+        let statusClass=o.status=="Shipped & Completed"?"shipped":"unship";
+        box.innerHTML+=`<div class="item-block">
+        OrderID:${o.orderId}, User Phone:${o.userPhone}, Total:€${o.totalPrice.toFixed(2)}<br>
+        Items:${goodsTxt}<br>
+        Time:${o.createTime}, <span class="${statusClass}">Status:${o.status}</span>
+        <br>
+        <button onclick="openOrderChat('${o.userId}','${o.userPhone}')">Chat With Buyer</button>
+        ${o.status!="Shipped & Completed"?`<button class="ship-btn" onclick="setShipped('${o.orderId}')">Mark As Shipped(Finish)</button>`:""}
+        </div>`
+    })
+}
+function setShipped(oid){
+    let list=DB.getOrder();
+    let item=list.find(x=>x.orderId==oid);
+    item.status="Shipped & Completed";
+    DB.saveOrder(list);
+    renderOrderAdmin();
+}
+function openOrderChat(uid,phone){
+    popChatUid=uid;
+    document.getElementById('popUserPhone').innerText=phone;
+    document.getElementById('popChatBox').style.display='flex';
+    refreshPopMsg();
+}
+function closePopChat(){
+    document.getElementById('popChatBox').style.display='none';
+}
+function sendPopMsg(){
+    let txt=document.getElementById('popInputTxt').value.trim();
+    if(!txt||!popChatUid)return;
+    let chat=DB.getChat();
+    if(!chat[popChatUid])chat[popChatUid]=[];
+    chat[popChatUid].push({type:'owner',content:txt});
+    DB.saveChat(chat);
+    document.getElementById('popInputTxt').value='';
+    refreshPopMsg();
+}
+function refreshPopMsg(){
+    let chat=DB.getChat()[popChatUid]||[];
+    let html='';
+    chat.forEach(m=>{
+        if(m.type==='customer') html+=`<div class="cus-msg">Buyer:${m.content}</div>`;
+        else html+=`<div class="my-msg">You:${m.content}</div>`;
+    })
+    document.getElementById('popMsgArea').innerHTML=html;
+    document.getElementById('popMsgArea').scrollTop=9999;
+}
+
+//全局聊天
+function renderChatUser(){
+    const chatData=DB.getChat();
+    const allUser=DB.getUsers();
+    const userListBox=document.getElementById('chatUserList');
+    userListBox.innerHTML='';
+    Object.keys(chatData).forEach(uid=>{
+        const u=allUser.find(x=>x.uid===uid);
+        userListBox+=`<div class="chat-user-item" onclick="openChat('${uid}')">${u?u.phone:uid}</div>`
+    })
+}
+function openChat(uid){
+    currentChatUid=uid;
+    const chat=DB.getChat();
+    const msgArr=chat[uid]||[];
+    const msgBox=document.getElementById('chatMsgBox');
+    msgBox.innerHTML='';
+    msgArr.forEach(m=>{
+        if(m.type==='customer') msgBox.innerHTML+=`<div class="cus-msg">Customer:${m.content}</div>`;
+        else msgBox.innerHTML+=`<div class="my-msg">You:${m.content}</div>`;
+    })
+}
+function sendOwnerMsg(){
+    if(!currentChatUid){alert('Select customer first');return;}
+    const txt=document.getElementById('ownerMsg').value.trim();
+    if(!txt)return;
+    const chat=DB.getChat();
+    if(!chat[currentChatUid])chat[currentChatUid]=[];
+    chat[currentChatUid].push({type:'owner',content:txt});
+    DB.saveChat(chat);
+    document.getElementById('ownerMsg').value='';
+    openChat(currentChatUid);
+}
+
+//积分礼品 可新增
+function renderGiftAdmin(){
+    const gift=DB.getPointGift();
+    const box=document.getElementById('giftList');
+    box.innerHTML='';
+    gift.forEach(g=>{
+        box.innerHTML+=`<div class="item-block">${g.name} | Need ${g.needPoint} Points</div>`
+    })
+}
+function addGift(){
+    const name=document.getElementById('giftName').value.trim();
+    const p=parseInt(document.getElementById('giftPoint').value);
+    if(!name||isNaN(p)){alert('Fill info');return;}
+    const gift=DB.getPointGift();
+    gift.push({name,needPoint:p});
+    DB.savePointGift(gift);
+    renderGiftAdmin();
+}
+</script>
+</body>
+</html>

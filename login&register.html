@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CnC | Login & Register</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+        body{background:#f5f5f5;display:flex;justify-content:center;align-items:center;height:100vh}
+        .wrap{width:380px;background:#fff;padding:35px;border:1px solid #eee}
+        .tab{display:flex;margin-bottom:25px;border-bottom:1px solid #ddd}
+        .tab>div{width:50%;text-align:center;padding:12px;cursor:pointer}
+        .tab-active{background:#111;color:#fff}
+        .inp{width:100%;padding:11px;margin:9px 0;border:1px solid #ddd;outline:none}
+        .submit{width:100%;padding:12px;background:#111;color:#fff;border:none;margin-top:10px;cursor:pointer}
+        #regBox{display:none}
+    </style>
+</head>
+<body>
+<div class="wrap">
+    <div class="tab">
+        <div id="loginTab" class="tab-active" onclick="switchTab('login')">Login</div>
+        <div id="regTab" onclick="switchTab('reg')">Register</div>
+    </div>
+    <div id="loginBox">
+        <input class="inp" id="logPhone" placeholder="Phone Number">
+        <input class="inp" id="logPwd" placeholder="Password" type="password">
+        <button class="submit" onclick="userLogin()">Sign In</button>
+    </div>
+    <div id="regBox">
+        <input class="inp" id="regPhone" placeholder="Phone Number">
+        <input class="inp" id="regPwd" placeholder="Set Password" type="password">
+        <button class="submit" onclick="userReg()">Create Account</button>
+    </div>
+</div>
+
+<script>
+const DB={
+    getUser:()=>JSON.parse(localStorage.getItem('cncUser')||'null'),
+    setUser:u=>localStorage.setItem('cncUser',JSON.stringify(u)),
+    getUsers:()=>JSON.parse(localStorage.getItem('cncAllUser')||'[]'),
+    saveUsers:arr=>localStorage.setItem('cncAllUser',JSON.stringify(arr))
+}
+function switchTab(type){
+    if(type==='login'){
+        document.getElementById('loginBox').style.display='block';
+        document.getElementById('regBox').style.display='none';
+        document.getElementById('loginTab').className='tab-active';
+        document.getElementById('regTab').className='';
+    }else{
+        document.getElementById('loginBox').style.display='none';
+        document.getElementById('regBox').style.display='block';
+        document.getElementById('regTab').className='tab-active';
+        document.getElementById('loginTab').className='';
+    }
+}
+// 注册，手机号唯一，随机唯一UID
+function userReg(){
+    const phone=document.getElementById('regPhone').value.trim();
+    const pwd=document.getElementById('regPwd').value.trim();
+    if(!phone||!pwd){alert('Fill all fields');return;}
+    const allUser=DB.getUsers();
+    if(allUser.find(u=>u.phone===phone)){alert('Phone already registered');return;}
+    const newUid='UID'+Date.now();
+    const newUser={uid:newUid,phone,pwd,point:0};
+    allUser.push(newUser);
+    DB.saveUsers(allUser);
+    alert(`Register Success, Your ID:${newUid}`);
+    switchTab('login');
+}
+// 登录
+function userLogin(){
+    const phone=document.getElementById('logPhone').value.trim();
+    const pwd=document.getElementById('logPwd').value.trim();
+    const allUser=DB.getUsers();
+    const find=allUser.find(u=>u.phone===phone&&u.pwd===pwd);
+    if(!find){alert('Wrong phone or password');return;}
+    DB.setUser(find);
+    location.href='index.html';
+}
+</script>
+</body>
+</html>

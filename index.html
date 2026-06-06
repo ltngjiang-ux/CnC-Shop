@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CnC | Coco not Common - Album Store</title>
+    <style>
+    *{margin:0;padding:0;box-sizing:border-box;font-family:Arial,sans-serif;}
+    :root{--black:#121212;--white:#fff;--gray:#f3f3f3;--dark-grey:#555;}
+    body{background:var(--white);color:var(--black);}
+    /* Header Nav */
+    .header{width:100%;height:70px;border-bottom:1px solid #eee;display:flex;align-items:center;justify-content:space-between;padding:0 5%;position:sticky;top:0;background:#fff;z-index:99}
+    .logo{display:flex;align-items:center;gap:8px}
+    .logo-short{font-size:24px;font-weight:bold}
+    .logo-full{font-size:13px;color:var(--dark-grey)}
+    .nav-left{display:flex;gap:32px}
+    .nav-left a,.nav-right a{text-decoration:none;color:var(--black);font-size:15px}
+    .nav-right{display:flex;gap:20px}
+    /* Banner */
+    .banner{width:90%;margin:30px auto;height:420px;background:var(--gray);display:flex;align-items:center;justify-content:center;text-align:center}
+    .banner h2{font-size:36px;margin-bottom:14px}
+    .banner p{color:#666;margin-bottom:24px}
+    .banner-btn{padding:12px 34px;background:var(--black);color:#fff;border:none;cursor:pointer}
+    /* Container */
+    .wrap{width:90%;margin:0 auto;padding:60px 0}
+    .sect-title{text-align:center;margin-bottom:40px}
+    /* Category */
+    .cate-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px}
+    .cate-item{height:170px;background:var(--gray);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.3s}
+    .cate-item:hover{background:#ddd}
+    /* Goods List */
+    .goods-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:24px;margin-top:30px}
+    .goods-card{border:1px solid #eee}
+    .goods-img{height:210px;background:var(--gray);overflow:hidden}
+    .goods-img img{width:100%;height:100%;object-fit:cover;display:block;}
+    .goods-desc{padding:15px}
+    .goods-name{margin:7px 0}
+    .goods-price{font-weight:bold;margin-bottom:10px}
+    .stock-tip{font-size:12px;color:#777;margin-bottom:8px}
+    .add-cart{width:100%;padding:8px;background:#111;color:#fff;border:none;cursor:pointer}
+    /* Footer */
+    footer{background:var(--black);color:#fff;padding:50px 5%;display:grid;grid-template-columns:repeat(4,1fr);gap:30px}
+    .foot-block h4{margin-bottom:18px}
+    .foot-block a,.foot-block p{color:#aaa;font-size:13px;line-height:2;text-decoration:none}
+    /* Floating Chat */
+    .chat-float{position:fixed;bottom:30px;right:30px;background:#111;color:#fff;padding:12px 18px;border:none;border-radius:5px;cursor:pointer}
+    .chat-box{position:fixed;bottom:80px;right:30px;width:320px;height:400px;border:1px solid #999;background:#fff;display:none;flex-direction:column}
+    .chat-top{background:#111;color:white;padding:8px;text-align:center}
+    .chat-content{flex:1;padding:10px;overflow:auto}
+    .chat-input{display:flex}
+    .chat-input input{flex:1;padding:6px;border:1px solid #ddd}
+    .chat-input button{background:#111;color:#fff;border:none;padding:6px}
+    .cus-msg{background:#eee;margin:4px;padding:5px;text-align:right}
+    .own-msg{background:#ddd;margin:4px;padding:5px;text-align:left}
+</style>
+
+</head>
+<body>
+<header class="header">
+    <div class="logo">
+        <span class="logo-short">CnC</span>
+        <span class="logo-full">Coco not Common</span>
+    </div>
+    <div class="nav-left">
+        <a href="index.html">Home</a>
+        <a href="#album">Album List</a>
+        <a href="pointShop.html">Point Store</a>
+    </div>
+    <div class="nav-right">
+        <a href="login&register.html">Login / Register</a>
+        <a href="cart.html">Shopping Cart</a>
+        <a href="admin.html">Admin(Owner Only)</a>
+    </div>
+</header>
+<section class="banner">
+    <div>
+        <h2>CnC | Coco not Common Official Album Store</h2>
+        <p>Original Physical Album & Limited Merchandise Collection</p>
+        <button class="banner-btn" onclick="scrollToGoods()">Browse All Items</button>
+    </div>
+</section>
+<section class="wrap">
+    <div class="sect-title"><h2>Category</h2></div>
+    <div class="cate-grid">
+        <div class="cate-item">K-Pop Albums</div>
+        <div class="cate-item">Western Records</div>
+        <div class="cate-item">Chinese Albums</div>
+        <div class="cate-item">Limited Merch Bundle</div>
+    </div>
+</section>
+<section id="album" class="wrap">
+    <div class="sect-title"><h2>On Sale Products</h2></div>
+    <div class="goods-grid" id="goodsBox"></div>
+</section>
+<footer>
+    <div class="foot-block">
+        <h4>CnC | Coco not Common</h4>
+        <p>Official physical album retailer</p>
+    </div>
+    <div class="foot-block">
+        <h4>Quick Link</h4>
+        <p><a href="index.html">Home</a></p>
+        <p><a href="pointShop.html">Point Exchange</a></p>
+    </div>
+    <div class="foot-block">
+        <h4>Customer Service</h4>
+        <p>Chat with owner after order submit</p>
+    </div>
+    <div class="foot-block">
+        <h4>Point Rule</h4>
+        <p>0.01 EUR = 1 Point</p>
+        <p>Points for free gifts</p>
+    </div>
+</footer>
+
+<!-- 聊天悬浮 -->
+<button class="chat-float" onclick="openUserChat()">Message Owner</button>
+<div class="chat-box" id="userChatWin">
+  <div class="chat-top">Chat With Shop Owner</div>
+  <div class="chat-content" id="userMsgArea"></div>
+  <div class="chat-input">
+    <input id="userChatInput" placeholder="Type message...">
+    <button onclick="sendUserMsg()">Send</button>
+  </div>
+</div>
+
+<script>
+// 全局存储
+const DB={
+    getUser:()=>JSON.parse(localStorage.getItem('cncUser')||'null'),
+    setUser:u=>localStorage.setItem('cncUser',JSON.stringify(u)),
+    getUsers:()=>JSON.parse(localStorage.getItem('cncAllUser')||'[]'),
+    saveUsers:arr=>localStorage.setItem('cncAllUser',JSON.stringify(arr)),
+    getGoods:()=>JSON.parse(localStorage.getItem('cncGoods')||'[]'),
+    saveGoods:arr=>localStorage.setItem('cncGoods',JSON.stringify(arr)),
+    getCart:()=>JSON.parse(localStorage.getItem('cncCart')||'[]'),
+    saveCart:arr=>localStorage.setItem('cncCart',JSON.stringify(arr)),
+    getOrder:()=>JSON.parse(localStorage.getItem('cncOrder')||'[]'),
+    saveOrder:arr=>localStorage.setItem('cncOrder',JSON.stringify(arr)),
+    getChat:()=>JSON.parse(localStorage.getItem('cncChat')||'{}'),
+    saveChat:obj=>localStorage.setItem('cncChat',JSON.stringify(obj)),
+    getPointGift:()=>JSON.parse(localStorage.getItem('cncPointGift')||'[]'),
+    savePointGift:arr=>localStorage.setItem('cncPointGift',JSON.stringify(arr))
+}
+
+//客户消息铃声
+const cusAudio = new Audio("https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3");
+function playCusRing(){
+    cusAudio.currentTime=0;
+    cusAudio.play().catch(e=>{});
+}
+document.body.onclick=()=>{cusAudio.play().then(()=>cusAudio.pause()).catch(e=>{})}
+
+//初始化默认商品
+function initDefaultGoods(){
+    let goods=DB.getGoods();
+    if(goods.length===0){
+        goods=[
+            {id:1,name:"Limited Album A",price:19.99,stock:50,desc:"Limited edition album",img:""},
+            {id:2,name:"Standard Album B",price:12.50,stock:80,desc:"Regular album",img:""},
+            {id:3,name:"Special Pack Album C",price:29.99,stock:30,desc:"Bundle pack",img:""},
+            {id:4,name:"Mini Album D",price:9.99,stock:120,desc:"Mini version",img:""}
+        ]
+        DB.saveGoods(goods);
+    }
+    renderGoods();
+}
+
+//【修复图片渲染】有图就展示img，无图空白灰色
+function renderGoods(){
+    const goods=DB.getGoods();
+    const box=document.getElementById('goodsBox');
+    box.innerHTML='';
+    goods.forEach(item=>{
+        let imgHtml = item.img ? `<img src="${item.img}">` : "";
+        box.innerHTML+=`
+        <div class="goods-card">
+            <div class="goods-img">${imgHtml}</div>
+            <div class="goods-desc">
+                <div class="goods-name">${item.name}</div>
+                <div class="goods-price">€${item.price.toFixed(2)}</div>
+                <div class="stock-tip">In Stock:${item.stock}</div>
+                <button class="add-cart" onclick="addCart(${item.id})">Add To Cart</button>
+            </div>
+        </div>`
+    })
+}
+
+//加入购物车
+function addCart(goodId){
+    const loginUser=DB.getUser();
+    if(!loginUser){
+        alert('Please login first');
+        location.href='login&register.html';
+        return;
+    }
+    const goods=DB.getGoods().find(i=>i.id===goodId);
+    let cart=DB.getCart();
+    const exist=cart.find(c=>c.userId===loginUser.uid&&c.goodId===goodId);
+    if(exist){
+        if(exist.buyNum>=goods.stock){
+            alert('Out of available stock');
+            return;
+        }
+        exist.buyNum+=1;
+    }else{
+        cart.push({userId:loginUser.uid,goodId:goodId,buyNum:1})
+    }
+    DB.saveCart(cart);
+    alert('Added to cart successfully');
+}
+
+function scrollToGoods(){document.getElementById('album').scrollIntoView({behavior:'smooth'})}
+
+//用户聊天
+function openUserChat(){
+  document.getElementById('userChatWin').style.display='flex';
+  loadUserChatMsg();
+}
+function sendUserMsg(){
+  const loginUser = DB.getUser();
+  if(!loginUser){alert("Please login first");location.href="login&register.html";return;}
+  let text = document.getElementById("userChatInput").value.trim();
+  if(!text)return;
+  let chatAll = DB.getChat();
+  if(!chatAll[loginUser.uid]) chatAll[loginUser.uid]=[];
+  chatAll[loginUser.uid].push({type:"customer",content:text});
+  DB.saveChat(chatAll);
+  document.getElementById("userChatInput").value="";
+  loadUserChatMsg();
+}
+function loadUserChatMsg(){
+  const u=DB.getUser();
+  let chat=DB.getChat()[u.uid]||[];
+  let html="";
+  chat.forEach(m=>{
+    if(m.type=="customer") html+=`<div class="cus-msg">${m.content}</div>`;
+    else {
+        playCusRing();
+        html+=`<div class="own-msg">Owner:${m.content}</div>`;
+    }
+  })
+  document.getElementById('userMsgArea').innerHTML=html;
+  document.getElementById('userMsgArea').scrollTop=9999;
+}
+
+window.onload=initDefaultGoods;
+</script>
+</body>
+</html>

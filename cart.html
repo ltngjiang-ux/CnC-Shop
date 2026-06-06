@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CnC | Shopping Cart</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+        body{padding:40px 5%}
+        h2{margin-bottom:30px}
+        .item{display:flex;align-items:center;padding:15px;border:1px solid #eee;margin-bottom:12px;gap:15px}
+        .num-box input{width:60px;padding:5px}
+        .total{margin:30px 0;font-size:18px;font-weight:bold}
+        .submit-order{padding:12px 30px;background:#111;color:#fff;border:none;cursor:pointer}
+        .back{margin-bottom:20px;display:inline-block;color:#111}
+    </style>
+</head>
+<body>
+<a class="back" href="index.html">← Back To Home</a>
+<h2>Your Shopping Cart</h2>
+<div id="cartList"></div>
+<div class="total">Total Amount: €<span id="totalPrice">0.00</span></div>
+<button class="submit-order" onclick="submitCheckedOrder()">Submit Selected Order(Owner will contact you for payment)</button>
+
+<script>
+const DB={
+    getUser:()=>JSON.parse(localStorage.getItem('cncUser')||'null'),
+    setUser:u=>localStorage.setItem('cncUser',JSON.stringify(u)),
+    getGoods:()=>JSON.parse(localStorage.getItem('cncGoods')||'[]'),
+    saveGoods:arr=>localStorage.setItem('cncGoods',JSON.stringify(arr)),
+    getCart:()=>JSON.parse(localStorage.getItem('cncCart')||'[]'),
+    saveCart:arr=>localStorage.setItem('cncCart',JSON.stringify(arr)),
+    getOrder:()=>JSON.parse(localStorage.getItem('cncOrder')||'[]'),
+    saveOrder:arr=>localStorage.setItem('cncOrder',JSON.stringify(arr)),
+    getUsers:()=>JSON.parse(localStorage.getItem('cncAllUser')||'[]'),
+    saveUsers:arr=>localStorage.setItem('cncAllUser',JSON.stringify(arr))
+}
+let checkedList=[];
+function init(){
+    const user=DB.getUser();
+    if(!user){alert('Please login');location.href='login&register.html';return;}
+    renderCart();
+}
+function renderCart(){
+    const user=DB.getUser();
+    const allCart=DB.getCart().filter(c=>c.userId===user.uid);
+    const allGoods=DB.getGoods();
+    const box=document.getElementById('cartList');
+    box.innerHTML='';
+    let total=0;
+    checkedList=[];
+    allCart.forEach(cartItem=>{
+        const g=allGoods.find(gd=>gd.id===cartItem.goodId);
+        if(!g)return;
+        const itemTotal=(g.price*cartItem.buyNum);
+        total+=itemTotal;
+        box.innerHTML+=`
+        <div class="item">
+            <input type="checkbox" onchange="toggleCheck(${cartItem.goodId},${g.price})" data-gid="${cartItem.goodId}">
+            <div>Name:${g.name}</div>
+            <div>Price:€${g.price.toFixed(2)}</div>
+            <div>Stock Limit:${g.stock}</div>
+            <div class="num-box">Buy Num:<input value="${cartItem.buyNum}" onchange="changeNum(${cartItem.goodId},this.value,${g.stock})"></div>
+            <div>Subtotal:€${itemTotal.toFixed(2)}</div>
+        </div>`
+    })
+    document.getElementById('totalPrice').innerText=total.toFixed(2);
+}
+function changeNum(gid,val,stock){
+    let num=parseInt(val);
+    if(isNaN(num)||num<1||num>stock){alert('Invalid quantity,check stock');renderCart();return;}
+    let cart=DB.getCart();
+    const item=cart.find(c=>c.goodId===gid&&c.userId===DB.getUser().uid);
+    item.buyNum=num;
+    DB.saveCart(cart);
+    renderCart();
+}
+function toggleCheck(gid,price){
+    const idx=checkedList.findIndex(i=>i.gid===gid);
+    if(idx>-1)checkedList.splice(idx,1);
+    else checkedList.push({gid,price});
+}
+function submitCheckedOrder(){
+    if(checkedList.length===0){alert('Select items first');return;}
+    const user=DB.getUser();
+    const allCart=DB.getCart();
+    const allGoods=DB.getGoods();
+    const allOrder=DB.getOrder();
+    let payTotal=0;
+    let buyArr=[];
+    checkedList.forEach(ch=>{
+        const cartItem=allCart.find(c=>c.goodId===ch.gid&&c.userId===user.uid);
+        const good=allGoods.find(g=>g.id===ch.gid);
+        payTotal+=ch.price*cartItem.buyNum;
+        buyArr.push({goodId:ch.gid,name:good.name,num:cartItem.buyNum,unitPrice:ch.price})
+        good.stock-=cartItem.buyNum;
+    })
+    const newOrder={
+        orderId:'ORD'+Date.now(),
+        userId:user.uid,
+        userPhone:user.phone,
+        goodsList:buyArr,
+        totalPrice:payTotal,
+        createTime:new Date().toLocaleString(),
+        status:'Pending Waiting Owner Contact'
+    }
+    allOrder.push(newOrder);
+    DB.saveOrder(allOrder);
+    DB.saveGoods(allGoods);
+    const addPoint=Math.floor(payTotal/0.01);
+    const allUser=DB.getUsers();
+    const u=allUser.find(x=>x.uid===user.uid);
+    u.point+=addPoint;
+    DB.saveUsers(allUser);
+    DB.setUser(u);
+    let newCart=allCart.filter(c=>!checkedList.find(ch=>ch.gid===c.gid&&c.userId===user.uid));
+    DB.saveCart(newCart);
+    alert(`Order submitted successfully!\nGet ${addPoint} points automatically!\nYou will be contacted via phone:${user.phone}`);
+    location.reload();
+}
+window.onload=init;
+</script>
+</body>
+</html>

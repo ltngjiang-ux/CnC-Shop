@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CnC | Point Exchange Store</title>
+    <style>
+        *{margin:0;padding:0;box-sizing:border-box;font-family:Arial}
+        body{padding:40px 5%}
+        .back{margin-bottom:25px;color:#111;display:inline-block}
+        h2{margin-bottom:15px}
+        .user-point{font-size:17px;margin-bottom:30px}
+        .gift-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:25px}
+        .gift-card{border:1px solid #eee;padding:20px}
+    </style>
+</head>
+<body>
+<a class="back" href="index.html">← Back Home</a>
+<h2>Point Exchange Store</h2>
+<div class="user-point">Your Available Points: <span id="myPoint">0</span></div>
+<div class="gift-grid" id="giftBox"></div>
+
+<script>
+const DB={
+    getUser:()=>JSON.parse(localStorage.getItem('cncUser')||'null'),
+    getPointGift:()=>JSON.parse(localStorage.getItem('cncPointGift')||'[]'),
+    savePointGift:arr=>localStorage.setItem('cncPointGift',JSON.stringify(arr))
+}
+function initGift(){
+    let gift=DB.getPointGift();
+    if(gift.length===0){
+        gift=[
+            {name:"Official Photocard Set",needPoint:500},
+            {name:"Limited Poster",needPoint:1200},
+            {name:"Album Keychain",needPoint:800},
+            {name:"Signed Postcard",needPoint:2500}
+        ]
+        DB.savePointGift(gift);
+    }
+    render();
+}
+function render(){
+    const user=DB.getUser()||{point:0};
+    document.getElementById('myPoint').innerText=user.point;
+    const gift=DB.getPointGift();
+    const box=document.getElementById('giftBox');
+    box.innerHTML='';
+    gift.forEach(g=>{
+        box.innerHTML+=`<div class="gift-card">
+        <h4>${g.name}</h4>
+        <p>Need ${g.needPoint} Points</p>
+        </div>`
+    })
+}
+window.onload=initGift;
+</script>
+</body>
+</html>
